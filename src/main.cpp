@@ -1,10 +1,25 @@
-#include <iostream> 
-#include <string> 
+#include <iostream>
+#include <string>
+
 #include "tagstream/matcher.hpp"
 
-int main(){
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        std::cerr << "usage: tagstream <patterns.tsv\n";
+        return 1;
+    }
+    std::vector<tagstream::Pattern> patterns = tagstream::load_patterns(argv[1]);
+
     std::string line;
-    while(std::getline(std::cin, line)){
-        std::cout << tagstream::to_lower(line) << '\n';
+    while (std::getline(std::cin, line)) {
+        std::set<std::string> tags = tagstream::naive_match(line, patterns);
+        std::string joined;
+        for (const std::string& t : tags) {
+            if (!joined.empty()) {
+                joined += ",";
+            }
+            joined += t;
+        }
+        std::cout << (joined.empty() ? "-" : joined) << "\t" << line << '\n';
     }
 }

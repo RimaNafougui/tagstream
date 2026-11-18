@@ -141,6 +141,10 @@ Stretch goals:
 
 Sample patterns can be built from the company names and tickers published by the U.S. Securities and Exchange Commission. Any dataset used for benchmarks will be credited here with its licence.
 
+## Ressources
+
+- [Aho-Corasick Algorithm for Pattern Searching](https://www.geeksforgeeks.org/dsa/aho-corasick-algorithm-pattern-searching/)
+
 ## Author
 
 Rima Nafougui, Computer Science, University of Montreal.
