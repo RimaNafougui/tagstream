@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Your code, as a library both the app and tests use
-add_library(tagstream_lib src/matcher.cpp)
+add_library(tagstream_lib src/matcher.cpp src/automaton.cpp)
 target_include_directories(tagstream_lib PUBLIC include)
 target_compile_options(tagstream_lib PRIVATE -Wall -Wextra)
 
@@ -24,7 +24,7 @@ FetchContent_MakeAvailable(googletest)
 
 # The test program
 enable_testing()
-add_executable(tagstream_tests tests/matcher_test.cpp)
+add_executable(tagstream_tests tests/matcher_test.cpp tests/automaton_test.cpp)
 target_link_libraries(tagstream_tests PRIVATE tagstream_lib GTest::gtest_main)
 include(GoogleTest)
 gtest_discover_tests(tagstream_tests)
