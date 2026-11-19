@@ -49,14 +49,14 @@ void check_seed(unsigned seed, const std::string& alphabet, int max_pattern_len,
 
 TEST(Property, AgreesWithNaiveOnTwoLetters) {
     for (unsigned seed = 0; seed < 2000; ++seed) {
-        check_seed(seed, "aAb", 5, 30);
+        check_seed(seed, "aAb ", 5, 30);
         if (HasFatalFailure()) return;
     }
 }
 
 TEST(Property, AgreesWithNaiveOnThreeLetters) {
     for (unsigned seed = 0; seed < 2000; ++seed) {
-        check_seed(seed, "abC", 6, 50);
+        check_seed(seed, "abC .", 6, 50);
         if (HasFatalFailure()) return;
     }
 }
