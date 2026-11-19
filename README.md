@@ -1,5 +1,7 @@
 # tagstream
 
+![CI](https://github.com/RimaNafougui/tagstream/actions/workflows/ci.yml/badge.svg)
+
 A high-speed stream tagger written in C++20. It reads a stream of text and labels every line with the entities it mentions, matching thousands of patterns in a single pass with a hand-written Aho-Corasick automaton.
 
 On 10,398 company names it tags about **2.1 million lines per second (163 MB/s)**, roughly **1,770 times faster** than checking each pattern one by one. Every result is checked against a simple reference matcher with seeded property tests.
@@ -90,13 +92,13 @@ ctest --test-dir build-asan --output-on-failure
 
 Measured on a MacBook Pro (Apple M4 Pro, Apple clang 21) with a Release build. Patterns are the 10,398 company names in the SEC company tickers list; input is 200,000 synthetic headlines, about half mentioning a company. The naive matcher is timed on 2,000 lines because it is too slow for the full set.
 
-| Metric | Naive | Automaton (std::map trie) | Automaton (flat table) |
-|---|---|---|---|
-| Throughput (lines/s) | about 1,200 | 1.20 million | **2.12 million** |
-| Throughput (MB/s) | n/a | 92.2 | **163.5** |
-| Speedup vs naive | 1x | 976x | **1,771x** |
-| Build time | n/a | 12.8 ms | 17.9 ms |
-| Peak memory (whole process) | n/a | 59.5 MB | 87.3 MB |
+| Metric                      | Naive       | Automaton (std::map trie) | Automaton (flat table) |
+| --------------------------- | ----------- | ------------------------- | ---------------------- |
+| Throughput (lines/s)        | about 1,200 | 1.20 million              | **2.12 million**       |
+| Throughput (MB/s)           | n/a         | 92.2                      | **163.5**              |
+| Speedup vs naive            | 1x          | 976x                      | **1,771x**             |
+| Build time                  | n/a         | 12.8 ms                   | 17.9 ms                |
+| Peak memory (whole process) | n/a         | 59.5 MB                   | 87.3 MB                |
 
 The flat table is 1.77 times faster than the `std::map` version, in exchange for a 27.6 MB table and 5 ms more build time. Both versions find the same 213,698 tags, and the benchmark checks that they agree with the naive matcher.
 
@@ -147,7 +149,7 @@ The SEC list has one entry per ticker, so some names map to several tickers (sha
 - [x] Case-insensitive matching and word boundaries
 - [x] Flat transition table
 - [x] Benchmark harness and measured results
-- [ ] Continuous integration with GitHub Actions
+- [x] Continuous integration with GitHub Actions
 - [ ] Benchmark on real headlines instead of synthetic ones
 
 Possible extensions:
