@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 using tagstream::Automaton;
+using tagstream::Pattern;
 
 TEST(Trie, EmptyAutomatonHasOnlyRoot) {
     Automaton a({});
@@ -44,4 +45,41 @@ TEST(Trie, EmptyPatternIsIgnored) {
     Automaton a({{"", "EMPTY"}});
     EXPECT_EQ(a.node_count(), 1u);
     EXPECT_TRUE(a.outputs_at(0).empty());
+}
+// Classic textbook example. Indices: he=0, she=1, his=2, hers=3.
+static std::vector<Pattern> classic() {
+    return {{"he", "HE"}, {"she", "SHE"}, {"his", "HIS"}, {"hers", "HERS"}};
+}
+
+TEST(FailureLinks, PointToLongestSuffix) {
+    Automaton a(classic());
+    EXPECT_EQ(a.fail_of(a.walk("she")), a.walk("he"));
+    EXPECT_EQ(a.fail_of(a.walk("sh")), a.walk("h"));
+    EXPECT_EQ(a.fail_of(a.walk("hers")), a.walk("s"));
+    EXPECT_EQ(a.fail_of(a.walk("h")), 0);
+}
+
+TEST(FailureLinks, NodesInheritSuffixOutputs) {
+    Automaton a(classic());
+    EXPECT_EQ(a.outputs_at(a.walk("she")), (std::vector<int>{1, 0}));
+}
+
+TEST(Match, FindsOverlappingPatterns) {
+    Automaton a(classic());
+    EXPECT_EQ(a.match("ushers"), (std::set<std::string>{"SHE", "HE", "HERS"}));
+}
+
+TEST(Match, ReturnsEmptyWhenNothingMatches) {
+    Automaton a(classic());
+    EXPECT_TRUE(a.match("xyz").empty());
+}
+
+TEST(Match, AgreesWithNaiveMatcher) {
+    std::vector<Pattern> p = {
+        {"Apple", "AAPL"}, {"Apple Inc", "AAPL"}, {"Microsoft", "MSFT"}, {"Royal Bank", "RY"}};
+    Automaton a(p);
+    for (const char* line : {"Apple and Microsoft shares fall", "Royal Bank raises dividend",
+                             "Weather warning in Montreal", ""}) {
+        EXPECT_EQ(a.match(line), tagstream::naive_match(line, p)) << "line: " << line;
+    }
 }

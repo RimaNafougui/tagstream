@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 
+#include "tagstream/automaton.hpp"
 #include "tagstream/matcher.hpp"
 
 int main(int argc, char* argv[]) {
@@ -9,10 +10,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     std::vector<tagstream::Pattern> patterns = tagstream::load_patterns(argv[1]);
+    tagstream::Automaton automaton(patterns);
 
     std::string line;
     while (std::getline(std::cin, line)) {
-        std::set<std::string> tags = tagstream::naive_match(line, patterns);
+        std::set<std::string> tags = automaton.match(line);
         std::string joined;
         for (const std::string& t : tags) {
             if (!joined.empty()) {

@@ -1,4 +1,6 @@
 #include "tagstream/automaton.hpp"
+
+#include <queue>
 namespace tagstream {
 
 // five functions
@@ -12,6 +14,7 @@ Automaton::Automaton(const std::vector<Pattern>& patterns) : patterns_(patterns)
         }
         insert(patterns[i].text, i);
     }
+    build_failure_links();
 }
 // insert
 void Automaton::insert(const std::string& text, int pattern_index) {
@@ -47,5 +50,57 @@ const std::vector<int>& Automaton::outputs_at(int node) const { return nodes_[no
 
 // node_count
 std::size_t Automaton::node_count() const { return nodes_.size(); }
+
+void Automaton::build_failure_links() {
+    std::queue<int> q;
+
+    // Depth 1: every child of the root fails to the root.
+    for (const auto& [c, child] : nodes_[0].children) {
+        nodes_[child].fail = 0;
+        q.push(child);
+    }
+
+    // Deeper levels, in BFS order.
+    while (!q.empty()) {
+        int u = q.front();
+        q.pop();
+        for (const auto& [c, v] : nodes_[u].children) {
+            // Follow u's failure chain until some node has a child for c.
+            int f = nodes_[u].fail;
+            while (f != 0 && nodes_[f].children.count(c) == 0) {
+                f = nodes_[f].fail;
+            }
+            auto it = nodes_[f].children.find(c);
+            nodes_[v].fail = (it != nodes_[f].children.end()) ? it->second : 0;
+
+            // Inherit the outputs of the failure node.
+            const std::vector<int>& inherited = nodes_[nodes_[v].fail].outputs;
+            nodes_[v].outputs.insert(nodes_[v].outputs.end(), inherited.begin(), inherited.end());
+
+            q.push(v);
+        }
+    }
+}
+
+std::set<std::string> Automaton::match(std::string_view line) const {
+    std::set<std::string> tags;
+    int cur = 0;
+    for (char c : line) {
+        // No child for c here? Fall back along failure links.
+        while (cur != 0 && nodes_[cur].children.count(c) == 0) {
+            cur = nodes_[cur].fail;
+        }
+        auto it = nodes_[cur].children.find(c);
+        cur = (it != nodes_[cur].children.end()) ? it->second : 0;
+
+        // Report every pattern ending here, including inherited ones.
+        for (int idx : nodes_[cur].outputs) {
+            tags.insert(patterns_[idx].tag);
+        }
+    }
+    return tags;
+}
+
+int Automaton::fail_of(int node) const { return nodes_[node].fail; }
 
 }  // namespace tagstream

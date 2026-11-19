@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <map>
+#include <set>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -21,13 +22,21 @@ class Automaton {
 
     std::size_t node_count() const;
 
+    // returns every tag whose pattern appears in the line
+    std::set<std::string> match(std::string_view line) const;
+
+    int fail_of(int node) const;
+
    private:
     struct Node {
         std::map<char, int> children;  // a char -> index of a child node
         std::vector<int> outputs;      // patterns ending here
+        int fail = 0;
     };
 
     void insert(const std::string& text, int pattern_index);
+
+    void build_failure_links();
 
     std::vector<Node> nodes_;
     std::vector<Pattern> patterns_;
