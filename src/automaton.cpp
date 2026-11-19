@@ -16,6 +16,7 @@ Automaton::Automaton(const std::vector<Pattern>& patterns) : patterns_(patterns)
         insert(to_lower(patterns[i].text), i);
     }
     build_failure_links();
+    build_table();
 }
 // insert
 void Automaton::insert(const std::string& text, int pattern_index) {
@@ -54,6 +55,7 @@ std::size_t Automaton::node_count() const { return nodes_.size(); }
 
 void Automaton::build_failure_links() {
     std::queue<int> q;
+    bfs_order_.push_back(0);
 
     // Depth 1: every child of the root fails to the root.
     for (const auto& [c, child] : nodes_[0].children) {
@@ -65,6 +67,7 @@ void Automaton::build_failure_links() {
     while (!q.empty()) {
         int u = q.front();
         q.pop();
+        bfs_order_.push_back(u);
         for (const auto& [c, v] : nodes_[u].children) {
             // Follow u's failure chain until some node has a child for c.
             int f = nodes_[u].fail;
@@ -87,13 +90,9 @@ std::set<std::string> Automaton::match(std::string_view line) const {
     std::set<std::string> tags;
     int cur = 0;
     for (std::size_t i = 0; i < line.size(); ++i) {
-        char c = static_cast<char>(std::tolower(static_cast<unsigned char>(line[i])));
-
-        while (cur != 0 && nodes_[cur].children.count(c) == 0) {
-            cur = nodes_[cur].fail;
-        }
-        auto it = nodes_[cur].children.find(c);
-        cur = (it != nodes_[cur].children.end()) ? it->second : 0;
+        unsigned char b =
+            static_cast<unsigned char>(std::tolower(static_cast<unsigned char>(line[i])));
+        cur = table_[static_cast<std::size_t>(cur) * static_cast<std::size_t>(width_) + column_[b]];
 
         for (int idx : nodes_[cur].outputs) {
             std::size_t end = i + 1;  // match ends after this character
@@ -108,4 +107,36 @@ std::set<std::string> Automaton::match(std::string_view line) const {
 
 int Automaton::fail_of(int node) const { return nodes_[node].fail; }
 
+void Automaton::build_table() {
+    // 1. Give each distinct character used in the trie its own column.
+    column_.fill(0);
+    width_ = 1;  // column 0 is reserved for characters in no pattern
+    for (const Node& node : nodes_) {
+        for (const auto& [c, child] : node.children) {
+            unsigned char b = static_cast<unsigned char>(c);
+            if (column_[b] == 0) {
+                column_[b] = width_++;
+            }
+        }
+    }
+
+    // 2. Fill the table in BFS order, so each node's failure target is already done.
+    std::size_t w = static_cast<std::size_t>(width_);
+    table_.assign(nodes_.size() * w, 0);  // everything starts pointing at the root
+    for (int u : bfs_order_) {
+        std::size_t row = static_cast<std::size_t>(u) * w;
+        if (u != 0) {
+            // No child for this character? Do what the failure node would do.
+            std::size_t fail_row = static_cast<std::size_t>(nodes_[u].fail) * w;
+            for (std::size_t col = 1; col < w; ++col) {
+                table_[row + col] = table_[fail_row + col];
+            }
+        }
+        // Real children override the inherited transitions.
+        for (const auto& [c, child] : nodes_[u].children) {
+            table_[row + column_[static_cast<unsigned char>(c)]] = child;
+        }
+    }
+}
+std::size_t Automaton::table_bytes() const { return table_.size() * sizeof(int); }
 }  // namespace tagstream

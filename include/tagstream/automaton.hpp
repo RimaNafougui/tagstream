@@ -26,6 +26,7 @@ class Automaton {
     std::set<std::string> match(std::string_view line) const;
 
     int fail_of(int node) const;
+    std::size_t table_bytes() const;
 
    private:
     struct Node {
@@ -40,6 +41,12 @@ class Automaton {
 
     std::vector<Node> nodes_;
     std::vector<Pattern> patterns_;
+    void build_table();
+
+    std::array<int, 256> column_{};  // byte -> column (0 = in no pattern)
+    int width_ = 1;                  // number of columns per node
+    std::vector<int> table_;         // table_[node * width_ + column] = next node
+    std::vector<int> bfs_order_;     // nodes in BFS order, filled by build_failure_links
 };
 
 }  // namespace tagstream
