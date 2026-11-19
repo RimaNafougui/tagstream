@@ -88,7 +88,7 @@ ctest --test-dir build-asan --output-on-failure
 
 ## Benchmarks
 
-Measured on a MacBook Pro (Apple silicon) with a Release build. Patterns are the 10,398 company names in the SEC company tickers list; input is 200,000 synthetic headlines, about half mentioning a company. The naive matcher is timed on 2,000 lines because it is too slow for the full set.
+Measured on a MacBook Pro (Apple M4 Pro, Apple clang 21) with a Release build. Patterns are the 10,398 company names in the SEC company tickers list; input is 200,000 synthetic headlines, about half mentioning a company. The naive matcher is timed on 2,000 lines because it is too slow for the full set.
 
 | Metric | Naive | Automaton (std::map trie) | Automaton (flat table) |
 |---|---|---|---|
