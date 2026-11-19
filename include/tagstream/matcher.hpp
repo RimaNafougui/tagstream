@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <set>
 #include <string>
 #include <string_view>
@@ -18,4 +19,10 @@ std::set<std::string> naive_match(std::string_view line, const std::vector<Patte
 
 // reads a tab-seperated file: one "text<TAB>tag" per line
 std::vector<Pattern> load_patterns(const std::string& path);
+
+// True for letters and digits, the characters that make up a word.
+bool is_word_char(char c);
+
+// True if line[start, end) is not glued to a letter or digit on either side.
+bool is_whole_word(std::string_view line, std::size_t start, std::size_t end);
 }  // namespace tagstream

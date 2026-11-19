@@ -63,12 +63,6 @@ TEST(FailureLinks, NodesInheritSuffixOutputs) {
     Automaton a(classic());
     EXPECT_EQ(a.outputs_at(a.walk("she")), (std::vector<int>{1, 0}));
 }
-
-TEST(Match, FindsOverlappingPatterns) {
-    Automaton a(classic());
-    EXPECT_EQ(a.match("ushers"), (std::set<std::string>{"SHE", "HE", "HERS"}));
-}
-
 TEST(Match, ReturnsEmptyWhenNothingMatches) {
     Automaton a(classic());
     EXPECT_TRUE(a.match("xyz").empty());
@@ -82,4 +76,19 @@ TEST(Match, AgreesWithNaiveMatcher) {
                              "Weather warning in Montreal", ""}) {
         EXPECT_EQ(a.match(line), tagstream::naive_match(line, p)) << "line: " << line;
     }
+}
+
+TEST(Match, IgnoresMatchesInsideWords) {
+    Automaton a(classic());
+    EXPECT_TRUE(a.match("ushers").empty());
+}
+
+TEST(Match, FindsOverlappingWholeWords) {
+    Automaton a({{"Bank of Montreal", "BMO"}, {"Montreal", "MTL"}});
+    EXPECT_EQ(a.match("Bank of Montreal raises dividend"), (std::set<std::string>{"BMO", "MTL"}));
+}
+
+TEST(Match, IgnoresCase) {
+    Automaton a(classic());
+    EXPECT_EQ(a.match("SHE said HE"), (std::set<std::string>{"SHE", "HE"}));
 }

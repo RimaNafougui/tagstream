@@ -9,12 +9,19 @@ namespace tagstream {
 
 std::set<std::string> naive_match(std::string_view line, const std::vector<Pattern>& patterns) {
     std::set<std::string> tags;
+    std::string lower_line = to_lower(line);
     for (const Pattern& p : patterns) {
         if (p.text.empty()) {
             continue;
         }
-        if (line.find(p.text) != std::string_view::npos) {
-            tags.insert(p.tag);
+        std::string needle = to_lower(p.text);
+        std::size_t pos = lower_line.find(needle);
+        while (pos != std::string::npos) {
+            if (is_whole_word(lower_line, pos, pos + needle.size())) {
+                tags.insert(p.tag);
+                break;  // one whole-word occurrence is enough
+            }
+            pos = lower_line.find(needle, pos + 1);  // try the next occurrence
         }
     }
     return tags;
@@ -41,5 +48,13 @@ std::vector<Pattern> load_patterns(const std::string& path) {
         patterns.push_back({row.substr(0, tab), row.substr(tab + 1)});
     }
     return patterns;
+}
+
+bool is_word_char(char c) { return std::isalnum(static_cast<unsigned char>(c)) != 0; }
+
+bool is_whole_word(std::string_view line, std::size_t start, std::size_t end) {
+    bool left_ok = (start == 0) || !is_word_char(line[start - 1]);
+    bool right_ok = (end == line.size()) || !is_word_char(line[end]);
+    return left_ok && right_ok;
 }
 }  // namespace tagstream

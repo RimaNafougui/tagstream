@@ -1,5 +1,6 @@
 #include "tagstream/automaton.hpp"
 
+#include <cctype>
 #include <queue>
 namespace tagstream {
 
@@ -12,7 +13,7 @@ Automaton::Automaton(const std::vector<Pattern>& patterns) : patterns_(patterns)
         if (patterns[i].text.empty()) {
             continue;
         }
-        insert(patterns[i].text, i);
+        insert(to_lower(patterns[i].text), i);
     }
     build_failure_links();
 }
@@ -85,17 +86,21 @@ void Automaton::build_failure_links() {
 std::set<std::string> Automaton::match(std::string_view line) const {
     std::set<std::string> tags;
     int cur = 0;
-    for (char c : line) {
-        // No child for c here? Fall back along failure links.
+    for (std::size_t i = 0; i < line.size(); ++i) {
+        char c = static_cast<char>(std::tolower(static_cast<unsigned char>(line[i])));
+
         while (cur != 0 && nodes_[cur].children.count(c) == 0) {
             cur = nodes_[cur].fail;
         }
         auto it = nodes_[cur].children.find(c);
         cur = (it != nodes_[cur].children.end()) ? it->second : 0;
 
-        // Report every pattern ending here, including inherited ones.
         for (int idx : nodes_[cur].outputs) {
-            tags.insert(patterns_[idx].tag);
+            std::size_t end = i + 1;  // match ends after this character
+            std::size_t start = end - patterns_[idx].text.size();
+            if (is_whole_word(line, start, end)) {
+                tags.insert(patterns_[idx].tag);
+            }
         }
     }
     return tags;
