@@ -19,6 +19,7 @@ include(FetchContent)
 FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.zip
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(googletest)
 
@@ -29,6 +30,6 @@ target_link_libraries(tagstream_tests PRIVATE tagstream_lib GTest::gtest_main)
 include(GoogleTest)
 gtest_discover_tests(tagstream_tests)
 
-#bench
+# The benchmark program
 add_executable(tagstream_bench bench/bench.cpp)
 target_link_libraries(tagstream_bench PRIVATE tagstream_lib)

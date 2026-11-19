@@ -3,6 +3,7 @@
 #include <cctype>
 #include <cstddef>
 #include <fstream>
+#include <stdexcept>
 #include <string>
 
 namespace tagstream {
