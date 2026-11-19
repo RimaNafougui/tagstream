@@ -24,7 +24,7 @@ FetchContent_MakeAvailable(googletest)
 
 # The test program
 enable_testing()
-add_executable(tagstream_tests tests/matcher_test.cpp tests/automaton_test.cpp)
+add_executable(tagstream_tests tests/matcher_test.cpp tests/automaton_test.cpp tests/property_test.cpp)
 target_link_libraries(tagstream_tests PRIVATE tagstream_lib GTest::gtest_main)
 include(GoogleTest)
 gtest_discover_tests(tagstream_tests)
